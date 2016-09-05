@@ -19,6 +19,7 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var subView: UIView!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     var isFavShow = false
     var show: TVShowDetail!
@@ -33,6 +34,8 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         super.viewDidLoad()
         showId = show.id
         connection = GlobalFunc.isConnectedToNetwork()
+        subView.hidden = true
+        activityIndicator.startAnimating()
     }
 
     override func viewDidAppear(animated: Bool) {
@@ -115,6 +118,8 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
                     }
                 } else {
                     seasonEpisodes.append(Array(season.episodes))
+                    episodes = self.seasonEpisodes[0]
+                    episodeTableView.reloadData()
                 }
                 seasonList.append("Season \(num)")
             }
@@ -133,7 +138,12 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         TMDBClient.sharedInstance().getTVShowCast(String(showId)) { (results, error) in
             if results != nil {
                 for result in results! {
-                    self.show.cast.append(result)
+                    dispatch_async(dispatch_get_main_queue()) {
+                        let realm = try! Realm()
+                        try! realm.write() {
+                            self.show.cast.append(result)
+                        }
+                    }
                 }
                 self.cast = results!
                 self.collectionView.reloadData()
@@ -159,6 +169,8 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         }
         
         seasonsTextField.text = seasonList[0]
+        activityIndicator.stopAnimating()
+        subView.hidden = false
     }
     
     func actionPressed () {

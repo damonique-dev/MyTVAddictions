@@ -96,19 +96,7 @@ class MyShowsViewController: UIViewController, UICollectionViewDelegate, UIColle
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath)
     {
         let show = myShows[indexPath.row]
-        if let myshow = isSavedShow(show.id) {
-            performSegueWithIdentifier("showDetail", sender: myshow)
-        } else {
-            TMDBClient.sharedInstance().getTvShowInfo(String(show.id)) { (results, error) in
-                if results != nil {
-                    dispatch_async(dispatch_get_main_queue()) {
-                        self.performSegueWithIdentifier("showDetail", sender: results)
-                    }
-                } else {
-                    self.displayAlert((error?.localizedDescription)!)
-                }
-            }
-        }
+        performSegueWithIdentifier("showDetail", sender: show)
     }
     
 }
