@@ -1,0 +1,6 @@
+framework module Pods_MyTVAddictionsTests {
+  umbrella header "Pods-MyTVAddictionsTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
