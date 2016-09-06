@@ -15,6 +15,7 @@ class MyShowsViewController: UIViewController, UICollectionViewDelegate, UIColle
     @IBOutlet weak var noResultsLabel: UILabel!
     
     var myShows = [TVShowDetail]()
+    var alertShowing = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,12 +30,6 @@ class MyShowsViewController: UIViewController, UICollectionViewDelegate, UIColle
     }
     
     //MARK: Helper Methods
-    private func displayAlert(message:String){
-        let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
-        alertView.addAction(UIAlertAction(title: "Ok", style: .Default, handler: nil))
-        presentViewController(alertView, animated: true, completion: nil)
-    }
-    
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showDetail" {
             let controller = segue.destinationViewController as! ShowDetailViewController
@@ -75,6 +70,7 @@ class MyShowsViewController: UIViewController, UICollectionViewDelegate, UIColle
                 cell.setPosterImage(UIImage(data: show.posterImageData!)!)
             }
         } else {
+            if checkConnection() {
             let photoUrl = TMDBClient.Constants.ImageURL + show.posterPath
                 TMDBClient.sharedInstance().getPhoto(photoUrl) { (imageData) in
                     if imageData != nil {
@@ -90,6 +86,7 @@ class MyShowsViewController: UIViewController, UICollectionViewDelegate, UIColle
                     }
                 }
             }
+        }
         return cell
     }
     
@@ -99,4 +96,26 @@ class MyShowsViewController: UIViewController, UICollectionViewDelegate, UIColle
         performSegueWithIdentifier("showDetail", sender: show)
     }
     
+}
+
+extension MyShowsViewController {
+    func displayAlert(message:String){
+        if !alertShowing {
+            alertShowing = true
+            let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
+                self.alertShowing = false
+                })
+            presentViewController(alertView, animated: true, completion: nil)
+        }
+    }
+    
+    func checkConnection() -> Bool {
+        if !GlobalFunc.isConnectedToNetwork() {
+            displayAlert("Please connect to a network to use this feature of the app!")
+            return false
+        } else {
+            return true
+        }
+    }
 }

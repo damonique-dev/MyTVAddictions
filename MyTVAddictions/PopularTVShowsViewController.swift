@@ -26,17 +26,11 @@ class PopularTVShowsViewController: UIViewController, UITableViewDelegate, UITab
     
     override func viewDidAppear(animated: Bool) {
         navigationController?.navigationBar.hidden = true
-        checkConnection()
-    }
-    
-    private func checkConnection() {
-        navigationController?.navigationBar.hidden = true
-        if !GlobalFunc.isConnectedToNetwork() {
-            displayAlert("Please connect to a network to use this feature of the app!")
-            warningLabel.hidden = false
-        } else {
+        if checkConnection() {
             warningLabel.hidden = true
             getShows()
+        } else {
+            warningLabel.hidden = false
         }
     }
     
@@ -49,18 +43,8 @@ class PopularTVShowsViewController: UIViewController, UITableViewDelegate, UITab
         }
     }
     
-    func displayAlert(message:String){
-        if !alertShowing {
-            alertShowing = true
-            let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
-            alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
-                self.alertShowing = false
-                })
-            presentViewController(alertView, animated: true, completion: nil)
-        }
-    }
-    
     func getShows () {
+        if checkConnection() {
         TMDBClient.sharedInstance().getPopularTVShows() { (results, error) in
             if error != nil {
                  self.displayAlert((error?.localizedDescription)!)
@@ -71,6 +55,7 @@ class PopularTVShowsViewController: UIViewController, UITableViewDelegate, UITab
             dispatch_async(dispatch_get_main_queue()) {
                 self.tableView.reloadData()
             }
+        }
         }
         
     }
@@ -100,6 +85,7 @@ class PopularTVShowsViewController: UIViewController, UITableViewDelegate, UITab
                 } else {
                     photoUrl = TMDBClient.Constants.ImageURL + show.posterPath
                 }
+                if self.checkConnection() {
                 TMDBClient.sharedInstance().getPhoto(photoUrl) { (imageData) in
                     if imageData != nil {
                         dispatch_async(dispatch_get_main_queue()) {
@@ -107,6 +93,9 @@ class PopularTVShowsViewController: UIViewController, UITableViewDelegate, UITab
                             cell.setPosterImage(UIImage(data: imageData!)!)
                         }
                     }
+                }
+                } else {
+                    cell.activityIndicator.stopAnimating()
                 }
             }
         }
@@ -116,6 +105,7 @@ class PopularTVShowsViewController: UIViewController, UITableViewDelegate, UITab
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let show = tvShows[indexPath.row]
+        if checkConnection() {
         TMDBClient.sharedInstance().getTvShowInfo(String(show.id)) { (results, error) in
             if results != nil {
                 dispatch_async(dispatch_get_main_queue()) {
@@ -125,6 +115,28 @@ class PopularTVShowsViewController: UIViewController, UITableViewDelegate, UITab
                 self.displayAlert((error?.localizedDescription)!)
             }
         }
+        }
     }
 }
 
+extension PopularTVShowsViewController {
+    func displayAlert(message:String){
+        if !alertShowing {
+            alertShowing = true
+            let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
+                self.alertShowing = false
+                })
+            presentViewController(alertView, animated: true, completion: nil)
+        }
+    }
+    
+    func checkConnection() -> Bool {
+        if !GlobalFunc.isConnectedToNetwork() {
+            displayAlert("Please connect to a network to use this feature of the app!")
+            return false
+        } else {
+            return true
+        }
+    }
+}

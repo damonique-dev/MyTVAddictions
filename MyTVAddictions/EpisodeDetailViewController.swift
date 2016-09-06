@@ -18,6 +18,7 @@ class EpisodeDetailViewController: UIViewController,UICollectionViewDelegate, UI
     var seasonNum: String!
     var episode: Episode!
     var cast = [Cast]()
+    var alertShowing = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,6 +40,7 @@ class EpisodeDetailViewController: UIViewController,UICollectionViewDelegate, UI
     private func populateFields() {
         overviewLabel.text = "\(episode.overview). \n-- Air date: \(episode.airDate)"
         let photoUrl = TMDBClient.Constants.ImageURL + episode.imagePath
+        if checkConnection() {
         TMDBClient.sharedInstance().getPhoto(photoUrl) { (imageData) in
             if imageData != nil {
                 dispatch_async(dispatch_get_main_queue()) {
@@ -46,9 +48,11 @@ class EpisodeDetailViewController: UIViewController,UICollectionViewDelegate, UI
                 }
             }
         }
+        }
     }
     
     private func getCast() {
+        if checkConnection() {
         TMDBClient.sharedInstance().getTVSeasonCast(showId, seasonNum: seasonNum) { (results, error) in
             if results != nil {
                 for result in results! {
@@ -65,14 +69,7 @@ class EpisodeDetailViewController: UIViewController,UICollectionViewDelegate, UI
                 self.displayAlert((error?.localizedDescription)!)
             }
         }
-    }
-    
-    func displayAlert(message:String){
-        let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
-        alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
-            self.navigationController?.popViewControllerAnimated(true)
-        })
-        presentViewController(alertView, animated: true, completion: nil)
+        }
     }
     
     //MARK: Collection View functions
@@ -89,6 +86,7 @@ class EpisodeDetailViewController: UIViewController,UICollectionViewDelegate, UI
                 cell.setImage(UIImage(data: actor.imageData!)!)
             }
         } else {
+            if checkConnection() {
             let photoUrl = TMDBClient.Constants.ImageURL + actor.imagePath
             TMDBClient.sharedInstance().getPhoto(photoUrl) { (imageData) in
                 if imageData != nil {
@@ -101,8 +99,31 @@ class EpisodeDetailViewController: UIViewController,UICollectionViewDelegate, UI
                     }
                 }
             }
+            }
         }
         
         return cell
+    }
+}
+
+extension EpisodeDetailViewController {
+    func displayAlert(message:String){
+        if !alertShowing {
+            alertShowing = true
+            let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
+                self.alertShowing = false
+                })
+            presentViewController(alertView, animated: true, completion: nil)
+        }
+    }
+    
+    func checkConnection() -> Bool {
+        if !GlobalFunc.isConnectedToNetwork() {
+            displayAlert("Please connect to a network to use this feature of the app!")
+            return false
+        } else {
+            return true
+        }
     }
 }

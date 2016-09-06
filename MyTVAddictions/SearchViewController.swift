@@ -32,10 +32,14 @@ class SearchViewController: UIViewController, UITableViewDelegate, UITableViewDa
         checkConnection()
     }
     
-    private func checkConnection() {
+    func checkConnection() -> Bool {
         if !GlobalFunc.isConnectedToNetwork() {
             displayAlert("Please connect to a network to use this feature of the app!")
             searchBar.userInteractionEnabled = false
+            return false
+        } else {
+            searchBar.userInteractionEnabled = true
+            return true
         }
     }
     
@@ -43,6 +47,7 @@ class SearchViewController: UIViewController, UITableViewDelegate, UITableViewDa
     func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText != "" {
             noResultsLabel.hidden = true
+            if checkConnection() {
             TMDBClient.sharedInstance().searchTV(searchText) { (results, error) in
                 if error != nil {
                     self.displayAlert((error?.localizedDescription)!)
@@ -52,6 +57,7 @@ class SearchViewController: UIViewController, UITableViewDelegate, UITableViewDa
                         self.tableView.reloadData()
                     }
                 }
+            }
             }
         }
         if searchText.isEmpty {
@@ -73,17 +79,6 @@ class SearchViewController: UIViewController, UITableViewDelegate, UITableViewDa
         }
     }
     
-    func displayAlert(message:String){
-        if !alertShowing {
-            alertShowing = true
-            let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
-            alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
-                self.alertShowing = false
-            })
-            presentViewController(alertView, animated: true, completion: nil)
-        }
-    }
-    
     //MARK - Table functions
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return tvShows.count
@@ -98,6 +93,7 @@ class SearchViewController: UIViewController, UITableViewDelegate, UITableViewDa
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let show = tvShows[indexPath.row]
+        if checkConnection() {
         TMDBClient.sharedInstance().getTvShowInfo(String(show.id)) { (results, error) in
             if results != nil {
                 dispatch_async(dispatch_get_main_queue()) {
@@ -107,6 +103,20 @@ class SearchViewController: UIViewController, UITableViewDelegate, UITableViewDa
                 self.displayAlert((error?.localizedDescription)!)
             }
         }
+        }
 
+    }
+}
+
+extension SearchViewController {
+    func displayAlert(message:String){
+        if !alertShowing {
+            alertShowing = true
+            let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
+                self.alertShowing = false
+                })
+            presentViewController(alertView, animated: true, completion: nil)
+        }
     }
 }

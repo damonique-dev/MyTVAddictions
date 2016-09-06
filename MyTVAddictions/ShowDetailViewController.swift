@@ -28,31 +28,25 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
     var seasonEpisodes = [[Episode]]()
     var episodes = [Episode]()
     var cast = [Cast]()
-    var connection = false
+    var alertShowing = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         showId = show.id
-        connection = GlobalFunc.isConnectedToNetwork()
         subView.hidden = true
         activityIndicator.startAnimating()
     }
 
     override func viewDidAppear(animated: Bool) {
-        connection = GlobalFunc.isConnectedToNetwork()
-        checkConnection()
-    }
-    
-    private func checkConnection() {
-        if !connection {
-            if !isSavedShow(){
-                displayAlert("Please connect to a network to use this feature of the app!")
-            }
-        } else {
+        if checkConnection() {
             setUp()
             getShowInfo()
             getCast()
             populateFields()
+        } else {
+            if !isSavedShow(){
+                displayAlert("Please connect to a network to use this feature of the app!")
+            }
         }
     }
     
@@ -128,13 +122,8 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         
     }
     
-    func displayAlert(message:String){
-        let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
-        alertView.addAction(UIAlertAction(title: "Ok", style: .Default, handler: nil))
-        presentViewController(alertView, animated: true, completion: nil)
-    }
-    
     private func getCast() {
+        if checkConnection() {
         TMDBClient.sharedInstance().getTVShowCast(String(showId)) { (results, error) in
             if results != nil {
                 for result in results! {
@@ -149,13 +138,15 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
                 self.collectionView.reloadData()
             }
         }
+        }
     }
     
     private func populateFields() {
         showTitle.text = show.title
         showOverview.text = show.overview
         episodeTableView.setContentOffset(CGPointZero, animated:true)
-        if show.posterImageData == nil && connection {
+        if show.posterImageData == nil {
+            if checkConnection() {
             let photoUrl = TMDBClient.Constants.ImageURL + show.posterPath
             TMDBClient.sharedInstance().getPhoto(photoUrl) { (imageData) in
                 if imageData != nil {
@@ -163,6 +154,7 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
                         self.showImage.image = UIImage(data: imageData!)!
                     }
                 }
+            }
             }
         } else {
             showImage.image = UIImage(data: show.posterImageData!)!
@@ -264,6 +256,7 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
                 cell.setImage(UIImage(data: actor.imageData!)!)
             }
         } else {
+            if checkConnection() {
             let photoUrl = TMDBClient.Constants.ImageURL + actor.imagePath
             TMDBClient.sharedInstance().getPhoto(photoUrl) { (imageData) in
                 if imageData != nil {
@@ -276,8 +269,31 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
                     }
                 }
             }
+            }
         }
         
         return cell
+    }
+}
+
+extension ShowDetailViewController {
+    func displayAlert(message:String){
+        if !alertShowing {
+            alertShowing = true
+            let alertView = UIAlertController(title: "Uh-Oh", message: message, preferredStyle: .Alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .Default){ (alert: UIAlertAction!) -> Void in
+                self.alertShowing = false
+                })
+            presentViewController(alertView, animated: true, completion: nil)
+        }
+    }
+    
+    func checkConnection() -> Bool {
+        if !GlobalFunc.isConnectedToNetwork() {
+            displayAlert("Please connect to a network to use this feature of the app!")
+            return false
+        } else {
+            return true
+        }
     }
 }
