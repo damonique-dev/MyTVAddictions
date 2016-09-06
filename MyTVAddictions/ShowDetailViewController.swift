@@ -20,6 +20,7 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
     @IBOutlet weak var subView: UIView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    @IBOutlet weak var favButton: UIButton!
     
     var isFavShow = false
     var show: TVShowDetail!
@@ -56,7 +57,6 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         seasonsTextField.inputView = pickerView
         
         navigationController?.navigationBar.hidden = false
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Action, target: self, action: #selector(actionPressed))
         tabBarController?.tabBar.hidden = false
         
         pickerView.delegate = self
@@ -66,6 +66,13 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         collectionView.dataSource = self
         
         scrollView.contentSize = subView.bounds.size
+        favButton.setTitle("Add to MyShows", forState: .Normal)
+        let realm = try! Realm()
+        let myShow = realm.objects(TVShowDetail.self).filter("id == \(show.id)").first
+        if myShow != nil {
+            isFavShow = true
+            favButton.setTitle("Remove from MyShows", forState: .Normal)
+        }
     }
     
     private func isSavedShow() -> Bool {
@@ -165,40 +172,24 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         subView.hidden = false
     }
     
-    func actionPressed () {
-        let alert = UIAlertController(title: show.title, message: nil, preferredStyle: .ActionSheet)
-        var firstActionText = ""
-        
-        if isFavShow == true {
-            firstActionText = "Remove from My Shows"
-        }
-        else {
-            firstActionText = "Add to My Shows"
-        }
-        let favShow = UIAlertAction(title: firstActionText, style: .Default) { (alert: UIAlertAction!) -> Void in
-            self.manageMyShows()
-        }
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .Cancel, handler: nil)
-        alert.addAction(favShow)
-        alert.addAction(cancelAction)
-        presentViewController(alert, animated: true, completion:nil)
-    }
-    
-    private func manageMyShows() {
+    @IBAction func manageFavShow(sender: UIButton) {
         let realm = try! Realm()
         if isFavShow == true {
             try! realm.write {
                 realm.delete(show!)
+                favButton.setTitle("Add to MyShows", forState: .Normal)
+                isFavShow = false
             }
         }
         else {
             try! realm.write {
                 realm.add(show)
-                
+                favButton.setTitle("Remove from MyShows", forState: .Normal)
+                isFavShow = true
             }
         }
     }
+
     
     //MARK: Picker View Methods
     func numberOfComponentsInPickerView(pickerView: UIPickerView) -> Int {

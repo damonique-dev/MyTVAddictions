@@ -373,14 +373,21 @@
                                                     </collectionView>
                                                 </subviews>
                                             </stackView>
-                                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="eT1-RF-eSq" userLabel="Picker Stack View">
+                                            <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="eT1-RF-eSq" userLabel="Picker Stack View">
                                                 <rect key="frame" x="8" y="486" width="584" height="33"/>
                                                 <subviews>
-                                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="nf6-uu-Ugv">
-                                                        <rect key="frame" x="0.0" y="0.0" width="584" height="33"/>
+                                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="nf6-uu-Ugv">
+                                                        <rect key="frame" x="0.0" y="0.0" width="292" height="33"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                         <textInputTraits key="textInputTraits"/>
                                                     </textField>
+                                                    <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rat-Ev-gPh">
+                                                        <rect key="frame" x="292" y="0.0" width="292" height="33"/>
+                                                        <state key="normal" title="Button"/>
+                                                        <connections>
+                                                            <action selector="manageFavShow:" destination="0vJ-I9-tSg" eventType="touchUpInside" id="TZp-mX-nNQ"/>
+                                                        </connections>
+                                                    </button>
                                                 </subviews>
                                             </stackView>
                                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="aSR-ID-OhG" userLabel="Table Stack View">
@@ -448,6 +455,7 @@
                         <outlet property="activityIndicator" destination="Y6v-gC-peU" id="MET-4V-mDY"/>
                         <outlet property="collectionView" destination="Su8-db-fjF" id="3vS-th-lIL"/>
                         <outlet property="episodeTableView" destination="hqg-gC-Ha6" id="yrR-8i-R1Y"/>
+                        <outlet property="favButton" destination="rat-Ev-gPh" id="s4o-O1-lGO"/>
                         <outlet property="scrollView" destination="61b-BX-Rza" id="bP4-Lm-IHk"/>
                         <outlet property="seasonsTextField" destination="nf6-uu-Ugv" id="exK-eL-cUj"/>
                         <outlet property="showImage" destination="hhe-Z5-bO1" id="HJs-9Y-bqu"/>
