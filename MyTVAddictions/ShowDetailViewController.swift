@@ -45,7 +45,7 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
             getCast()
             populateFields()
         } else {
-            if !isSavedShow(){
+            if !setFavShow(){
                 displayAlert("Please connect to a network to use this feature of the app!")
             }
         }
@@ -66,13 +66,19 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
         collectionView.dataSource = self
         
         scrollView.contentSize = subView.bounds.size
-        favButton.setTitle("Add to MyShows", forState: .Normal)
+        favButton.tintColor = UIColor.blackColor()
+        favButton.setTitle("Add Show", forState: .Normal)
+    }
+    
+    private func setFavShow() ->Bool {
         let realm = try! Realm()
         let myShow = realm.objects(TVShowDetail.self).filter("id == \(show.id)").first
         if myShow != nil {
             isFavShow = true
-            favButton.setTitle("Remove from MyShows", forState: .Normal)
+            favButton.setTitle("Remove Show", forState: .Normal)
+            return true
         }
+        return false
     }
     
     private func isSavedShow() -> Bool {
@@ -160,32 +166,41 @@ class ShowDetailViewController: UIViewController, UIPickerViewDelegate, UIPicker
                     dispatch_async(dispatch_get_main_queue()) {
                         self.showImage.image = UIImage(data: imageData!)!
                     }
+                } else {
+                    self.showImage.image = UIImage(named: NSString(string: "placeholder") as String)
                 }
             }
             }
         } else {
             showImage.image = UIImage(data: show.posterImageData!)!
         }
-        
-        seasonsTextField.text = seasonList[0]
+        if !seasonList.isEmpty {
+            seasonsTextField.text = seasonList[0]
+            seasonsTextField.hidden = false
+            episodeTableView.hidden = false
+        } else {
+            seasonsTextField.hidden = true
+            episodeTableView.hidden = true
+        }
         activityIndicator.stopAnimating()
         subView.hidden = false
     }
     
     @IBAction func manageFavShow(sender: UIButton) {
         let realm = try! Realm()
+        let copy = TVShowDetail(value: show)
         if isFavShow == true {
             try! realm.write {
-                realm.delete(show!)
-                favButton.setTitle("Add to MyShows", forState: .Normal)
+                realm.delete(copy)
                 isFavShow = false
+                favButton.setTitle("Add Show", forState: .Normal)
             }
         }
         else {
             try! realm.write {
-                realm.add(show)
-                favButton.setTitle("Remove from MyShows", forState: .Normal)
+                realm.add(copy)
                 isFavShow = true
+                favButton.setTitle("Remove Show", forState: .Normal)
             }
         }
     }
